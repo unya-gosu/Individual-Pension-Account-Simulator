@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>연금저축 수령 가능 계산기</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" />
+    <link rel="stylesheet" href="../style.css" />
+  </head>
+  <body>
+    <div class="card" id="pensionCard">
+      <h1 class="calc-title">연금저축 수령 가능 계산기</h1>
+      <p class="calc-subtitle">60세 기준 · 만 59세까지 납입</p>
+
+      <form id="calculatorForm" novalidate>
+        <div class="field-group">
+          <label class="field-label">1. 총급여(세전 연봉)</label>
+          <div class="option-row option-row-salary">
+            <label class="radio radio-salary-under">
+              <input type="radio" name="salaryBracket" value="under" checked />
+              <span>5,500만원 이하 (세액공제 16.5%)</span>
+            </label>
+            <label class="radio radio-salary-over">
+              <input type="radio" name="salaryBracket" value="over" />
+              <span>5,500만원 이상 (세액공제 13.2%)</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label for="currentBalance" class="field-label">2. 현재 연금저축 잔고 <span class="label-unit">(만원)</span></label>
+          <input
+            type="number"
+            id="currentBalance"
+            class="text-input"
+            min="0"
+            step="10"
+            value="0"
+          />
+          <div class="field-hint">이미 납입한 연금저축 잔고가 있으면 입력하세요.</div>
+        </div>
+
+        <div class="field-group">
+          <label for="annualContribution" class="field-label">3. 연간 납입액 <span class="label-unit">(만원)</span></label>
+          <input
+            type="number"
+            id="annualContribution"
+            class="text-input"
+            min="100"
+            max="900"
+            step="10"
+            value="600"
+          />
+          <div class="field-hint">100만원~900만원 사이 금액을 입력하세요.</div>
+          <div class="field-inline-result" id="netInvestPerYear"></div>
+        </div>
+
+        <div class="field-group">
+          <label for="portfolioSelect" class="field-label">4. 예상 수익률(연복리)</label>
+          <select id="portfolioSelect" class="text-input">
+            <option value="sp500">S&amp;P500 / 나스닥100 (10%)</option>
+            <option value="allweather">올웨더 포트폴리오 (8%)</option>
+            <option value="custom">기타 (직접 입력)</option>
+          </select>
+          <div id="customReturnWrapper" class="field-inline" hidden>
+            <input
+              type="number"
+              id="customReturn"
+              class="text-input"
+              placeholder="연 수익률 (%) 직접 입력"
+              step="0.1"
+            />
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label for="currentAge" class="field-label">5. 현재 만나이</label>
+          <input
+            type="number"
+            id="currentAge"
+            class="text-input"
+            min="20"
+            max="59"
+            value="35"
+          />
+          <div class="field-hint">만 나이 기준으로 입력하세요. (최대 59세)</div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">6. 연금 납입 시점</label>
+          <div class="option-row">
+            <label class="radio">
+              <input type="radio" name="paymentTiming" value="begin" checked />
+              <span>연초 일시납</span>
+            </label>
+            <label class="radio">
+              <input type="radio" name="paymentTiming" value="end" />
+              <span>연말 일시납</span>
+            </label>
+            <label class="radio">
+              <input type="radio" name="paymentTiming" value="monthly" />
+              <span>매월 분할납</span>
+            </label>
+          </div>
+        </div>
+
+        <button type="button" id="calculateButton" class="primary-button">
+          계산하기
+        </button>
+      </form>
+
+      <div class="divider"></div>
+
+      <section id="resultSection" class="result-section" aria-live="polite">
+        <p class="result-placeholder">입력값을 설정한 뒤 <strong>계산하기</strong> 버튼을 눌러주세요.</p>
+      </section>
+    </div>
+
+    <script>
+      (function () {
+        const card = document.getElementById('pensionCard');
+        if (card) {
+          window.setTimeout(() => card.classList.add('ready'), 50);
+        }
+
+        const salaryRadios = document.querySelectorAll('input[name="salaryBracket"]');
+        const currentBalanceInput = document.getElementById('currentBalance');
+        const annualInput = document.getElementById('annualContribution');
+        const netPerYearEl = document.getElementById('netInvestPerYear');
+        const portfolioSelect = document.getElementById('portfolioSelect');
+        const customReturnWrapper = document.getElementById('customReturnWrapper');
+        const customReturnInput = document.getElementById('customReturn');
+        const ageInput = document.getElementById('currentAge');
+        const timingRadios = document.querySelectorAll('input[name="paymentTiming"]');
+        const calcButton = document.getElementById('calculateButton');
+        const resultSection = document.getElementById('resultSection');
+
+        function getSelectedSalaryBracket() {
+          const checked = document.querySelector('input[name="salaryBracket"]:checked');
+          return checked ? checked.value : 'under';
+        }
+
+        function getTaxCreditRate() {
+          const bracket = getSelectedSalaryBracket();
+          return bracket === 'under' ? 0.165 : 0.132;
+        }
+
+        function formatMoneyMan(amount) {
+          const rounded = Math.round(amount);
+          if (rounded >= 10000) {
+            const eok = Math.floor(rounded / 10000);
+            const man = rounded - eok * 10000;
+            if (man > 0) {
+              return (
+                eok.toLocaleString('ko-KR') +
+                '억 ' +
+                man.toLocaleString('ko-KR') +
+                '만원'
+              );
+            }
+            return eok.toLocaleString('ko-KR') + '억원';
+          }
+          return rounded.toLocaleString('ko-KR') + '만원';
+        }
+
+        function updateNetInvestPerYear() {
+          const annual = parseFloat(annualInput.value);
+          if (isNaN(annual) || annual <= 0) {
+            netPerYearEl.textContent = '';
+            return;
+          }
+          const rate = getTaxCreditRate();
+          const taxCredit = annual * rate;
+          const netInvest = annual - taxCredit;
+
+          netPerYearEl.innerHTML =
+            '월 기준 납입액 약 <strong>' +
+            formatMoneyMan(annual / 12) +
+            '</strong> · 연간 세액공제액 약 <strong>' +
+            formatMoneyMan(taxCredit) +
+            '</strong> · 실투자액 약 <strong>' +
+            formatMoneyMan(netInvest) +
+            '</strong>';
+        }
+
+        salaryRadios.forEach((r) => r.addEventListener('change', updateNetInvestPerYear));
+        annualInput.addEventListener('input', updateNetInvestPerYear);
+
+        portfolioSelect.addEventListener('change', () => {
+          if (portfolioSelect.value === 'custom') {
+            customReturnWrapper.hidden = false;
+            customReturnInput.focus();
+          } else {
+            customReturnWrapper.hidden = true;
+          }
+        });
+
+        function getAnnualReturnRate() {
+          const value = portfolioSelect.value;
+          if (value === 'sp500') return 0.10;
+          if (value === 'allweather') return 0.08;
+          const custom = parseFloat(customReturnInput.value);
+          if (isNaN(custom) || custom <= 0) {
+            throw new Error('custom-return-required');
+          }
+          return custom / 100;
+        }
+
+        function getPaymentTiming() {
+          const checked = document.querySelector('input[name="paymentTiming"]:checked');
+          return checked ? checked.value : 'begin';
+        }
+
+        // 연도별 납입금이 만 60세에 얼마가 되는지까지 함께 계산
+        function calculateBalanceWithBreakdown(annualContribution, years, rate, timing) {
+          const breakdown = new Array(years).fill(0);
+
+          if (years <= 0 || annualContribution <= 0) {
+            return { final: 0, breakdown };
+          }
+
+          if (timing === 'monthly') {
+            const months = years * 12;
+            const monthlyContribution = annualContribution / 12;
+            const monthlyRate = Math.pow(1 + rate, 1 / 12) - 1;
+
+            for (let m = 0; m < months; m++) {
+              // 1) 기존 잔액에 월 복리 적용
+              for (let y = 0; y < years; y++) {
+                breakdown[y] *= 1 + monthlyRate;
+              }
+              // 2) 이번 달 납입금은 해당 연도 버킷에 적립
+              const yearIndex = Math.floor(m / 12);
+              breakdown[yearIndex] += monthlyContribution;
+            }
+          } else if (timing === 'begin') {
+            // 연초 일시납: 해당 연도에 먼저 납입 후, 그 해가 끝날 때까지 1년 성장
+            for (let year = 0; year < years; year++) {
+              breakdown[year] += annualContribution;
+              for (let y = 0; y <= year; y++) {
+                breakdown[y] *= 1 + rate;
+              }
+            }
+          } else {
+            // 연말 일시납: 먼저 기존 금액이 1년 성장, 그 해 납입금은 성장 없이 합산
+            for (let year = 0; year < years; year++) {
+              for (let y = 0; y < year; y++) {
+                breakdown[y] *= 1 + rate;
+              }
+              breakdown[year] += annualContribution;
+            }
+          }
+
+          const final = breakdown.reduce((sum, v) => sum + v, 0);
+          return { final, breakdown };
+        }
+
+        function runCalculation() {
+          const annual = parseFloat(annualInput.value);
+          const currentAge = parseInt(ageInput.value, 10);
+          const currentBalance = Math.max(0, parseFloat(currentBalanceInput.value) || 0);
+
+          if (isNaN(annual) || annual < 100 || annual > 900) {
+            alert('연간 납입액을 100만원~900만원 사이로 입력해주세요.');
+            annualInput.focus();
+            return;
+          }
+
+          if (isNaN(currentAge) || currentAge < 20 || currentAge > 59) {
+            alert('현재 만나이를 20세~59세 사이로 입력해주세요.');
+            ageInput.focus();
+            return;
+          }
+
+          const years = 60 - currentAge;
+          if (years <= 0) {
+            resultSection.innerHTML =
+              '<p class="result-error">이미 만 59세 이상이므로, 추가 납입 기간이 없습니다.</p>';
+            return;
+          }
+
+          let rate;
+          try {
+            rate = getAnnualReturnRate();
+          } catch (e) {
+            if (e.message === 'custom-return-required') {
+              alert('기타를 선택하셨다면 연 수익률(%)을 입력해주세요.');
+              customReturnInput.focus();
+              return;
+            }
+            throw e;
+          }
+
+          const timing = getPaymentTiming();
+          const taxRate = getTaxCreditRate();
+
+          const taxCreditPerYear = annual * taxRate;
+          const netInvestPerYear = annual - taxCreditPerYear;
+
+          const totalContribution = annual * years;
+          const totalTaxCredit = taxCreditPerYear * years;
+          const totalNetInvest = currentBalance + netInvestPerYear * years;
+
+          const currentBalanceFutureValue = currentBalance * Math.pow(1 + rate, years);
+          const breakdownResult = calculateBalanceWithBreakdown(annual, years, rate, timing);
+          const contributionFutureTotal = breakdownResult.final;
+          const finalBalance = currentBalanceFutureValue + contributionFutureTotal;
+          const perYearFutureValues = breakdownResult.breakdown;
+          const lumpTaxRate = 0.165;
+          const taxOnLump = finalBalance * lumpTaxRate;
+          const netLump = finalBalance - taxOnLump;
+          const profitAfterTax = netLump - totalNetInvest;
+
+          let yearRows = '';
+          if (currentBalance > 0) {
+            yearRows +=
+              '<tr><td>현재 잔고</td><td>' +
+              formatMoneyMan(currentBalance) +
+              '</td><td>' +
+              formatMoneyMan(currentBalanceFutureValue) +
+              '</td></tr>';
+          }
+          for (let i = 0; i < years; i++) {
+            const ageAtContribution = currentAge + i;
+            const futureValue = perYearFutureValues[i];
+            if (!futureValue || futureValue <= 0) continue;
+            yearRows +=
+              '<tr><td>' + ageAtContribution + '세</td><td>' +
+              formatMoneyMan(annual) + '</td><td>' +
+              formatMoneyMan(futureValue) + '</td></tr>';
+          }
+          const totalPrincipal = currentBalance + totalContribution;
+          yearRows +=
+            '<tr class="year-table-total">' +
+            '<td>합계</td><td>' + formatMoneyMan(totalPrincipal) + '</td><td>' +
+            formatMoneyMan(finalBalance) + '</td></tr>';
+
+          const breakdownHtml =
+            '<div class="result-breakdown">' +
+            '<h3 class="result-subtitle">연도별 납입금의 만 60세 예상 가치</h3>' +
+            '<div class="table-wrapper">' +
+            '<table class="year-table">' +
+            '<thead><tr><th>납입 연령</th><th>당해 연도 원금</th><th>만 60세 예상 금액</th></tr></thead>' +
+            '<tbody>' + yearRows + '</tbody></table></div></div>';
+
+          resultSection.innerHTML =
+            '<h2 class="result-title">계산 결과</h2>' +
+            '<p class="result-summary">현재 ' +
+            currentAge +
+            '세 기준, 만 59세까지 총 ' +
+            years +
+            '년간 납입했을 때 예상 결과입니다.</p>' +
+            '<ul class="result-list">' +
+            '<li><span>연간 납입액</span><strong>' +
+            formatMoneyMan(annual) +
+            '</strong></li>' +
+            '<li><span>연간 세액공제율</span><strong>' +
+            (taxRate * 100).toFixed(1) +
+            '%</strong></li>' +
+            '<li><span>연간 세액공제액</span><strong>' +
+            formatMoneyMan(taxCreditPerYear) +
+            '</strong></li>' +
+            '<li><span>총 납입원금(세전)</span><strong>' +
+            formatMoneyMan(totalContribution) +
+            '</strong></li>' +
+            '<li><span>총 세액공제액</span><strong>' +
+            formatMoneyMan(totalTaxCredit) +
+            '</strong></li>' +
+            '<li><span>총 실투자액(세후)</span><strong>' +
+            formatMoneyMan(totalNetInvest) +
+            '</strong></li>' +
+            '</ul>' +
+            '<div class="result-highlight">' +
+            '<div><span>만 59세 예상 평가액</span><strong>' +
+            formatMoneyMan(finalBalance) +
+            '</strong></div>' +
+            '<div><span>일시 수령 시 세금 (16.5%)</span><strong>' +
+            formatMoneyMan(taxOnLump) +
+            '</strong></div>' +
+            '<div><span>일시 수령 실수령액</span><strong>' +
+            formatMoneyMan(netLump) +
+            '</strong></div>' +
+            '<div><span>실투자 대비 세후 수익</span><strong>' +
+            formatMoneyMan(profitAfterTax) +
+            '</strong></div>' +
+            '</div>' +
+            breakdownHtml;
+        }
+
+        calcButton.addEventListener('click', runCalculation);
+
+        // 초기 표시
+        updateNetInvestPerYear();
+      })();
+    </script>
+  </body>
+</html>
+
