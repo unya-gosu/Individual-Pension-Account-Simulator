@@ -1,0 +1,529 @@
+/* 웹 명함 - 이지흠 */
+
+:root {
+  --bg-dark: #0f0f12;
+  --card-bg: #1a1a1f;
+  --accent: #5b8def;
+  --accent-soft: rgba(91, 141, 239, 0.25);
+  --text: #e8e6e3;
+  --text-muted: #9a9690;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-dark);
+  font-family: 'Noto Sans KR', sans-serif;
+  color: var(--text);
+  padding: 1.5rem;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -20%, var(--accent-soft), transparent),
+    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(91, 141, 239, 0.08), transparent);
+}
+
+.card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--card-bg);
+  border-radius: 24px;
+  padding: 2.5rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity: 0.9;
+}
+
+/* 캐릭터 얼굴 */
+.avatar-wrap {
+  text-align: center;
+  margin-bottom: 1.25rem;
+}
+
+.avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--accent-soft);
+  transition: transform 0.3s ease;
+}
+
+.avatar:hover {
+  transform: scale(1.05);
+}
+
+.name {
+  font-size: 1.65rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 0.35rem;
+  letter-spacing: -0.02em;
+}
+
+.job {
+  font-size: 0.95rem;
+  color: var(--accent);
+  text-align: center;
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+.intro {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  margin: 1.25rem 0;
+}
+
+.contact-list {
+  list-style: none;
+}
+
+.contact-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  transition: color 0.2s, transform 0.2s;
+}
+
+.contact-list li:hover {
+  color: var(--accent);
+}
+
+.contact-list li:hover {
+  transform: translateX(4px);
+}
+
+.contact-list a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.contact-list .icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+/* LinkedIn 버튼 */
+.contact-list li .btn-linkedin {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.65rem 1rem;
+  margin-top: 0.5rem;
+  background: #0A66C2;
+  color: #fff !important;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.contact-list li .btn-linkedin:hover {
+  background: #004182;
+  transform: translateY(-2px);
+  color: #fff !important;
+}
+
+.linkedin-icon {
+  font-size: 1.1rem;
+  font-weight: 700;
+  font-family: Arial, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+/* YouTube 버튼 */
+.contact-list li .btn-youtube {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.65rem 1rem;
+  margin-top: 0.5rem;
+  background: #FF0000;
+  color: #fff !important;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.contact-list li .btn-youtube:hover {
+  background: #CC0000;
+  transform: translateY(-2px);
+  color: #fff !important;
+}
+
+.youtube-icon {
+  font-size: 0.85rem;
+}
+
+.footer-note {
+  margin-top: 1.5rem;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  opacity: 0.8;
+}
+
+/* 등장 애니메이션 */
+.card.ready .avatar-wrap {
+  animation: fadeInDown 0.5s ease-out;
+}
+
+.card.ready .name {
+  animation: fadeIn 0.5s ease-out 0.1s both;
+}
+
+.card.ready .job {
+  animation: fadeIn 0.5s ease-out 0.2s both;
+}
+
+.card.ready .intro {
+  animation: fadeIn 0.5s ease-out 0.3s both;
+}
+
+.card.ready .contact-list li {
+  animation: fadeIn 0.4s ease-out both;
+}
+
+.card.ready .contact-list li:nth-child(1) { animation-delay: 0.4s; }
+.card.ready .contact-list li:nth-child(2) { animation-delay: 0.5s; }
+.card.ready .contact-list li:nth-child(3) { animation-delay: 0.6s; }
+.card.ready .contact-list li:nth-child(4) { animation-delay: 0.7s; }
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== 연금저축 계산기 스타일 ===== */
+.calc-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 0.35rem;
+}
+
+.calc-subtitle {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 1.6rem;
+}
+
+.field-group {
+  margin-bottom: 1.2rem;
+}
+
+.field-label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 0.4rem;
+}
+
+.label-unit {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.text-input,
+select.text-input {
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--text);
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+
+.text-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px rgba(91, 141, 239, 0.4);
+}
+
+.field-hint {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.field-inline-result {
+  margin-top: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--accent);
+}
+
+.field-inline {
+  margin-top: 0.5rem;
+}
+
+.option-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.radio input {
+  accent-color: var(--accent);
+}
+
+/* 총급여 선택지 색 구분 (계급 느낌 없이) */
+.radio-salary-under {
+  background: rgba(72, 160, 140, 0.12);
+  border-color: rgba(72, 160, 140, 0.35);
+}
+.radio-salary-under:hover,
+.radio-salary-under:has(input:checked) {
+  background: rgba(72, 160, 140, 0.2);
+  border-color: rgba(72, 160, 140, 0.5);
+}
+.radio-salary-under input {
+  accent-color: #48a08c;
+}
+
+.radio-salary-over {
+  background: rgba(180, 140, 90, 0.12);
+  border-color: rgba(180, 140, 90, 0.35);
+}
+.radio-salary-over:hover,
+.radio-salary-over:has(input:checked) {
+  background: rgba(180, 140, 90, 0.2);
+  border-color: rgba(180, 140, 90, 0.5);
+}
+.radio-salary-over input {
+  accent-color: #b48c5a;
+}
+
+.primary-button {
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.7rem 1rem;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, var(--accent), #7c9dff);
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+
+.primary-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 20px -10px rgba(0, 0, 0, 0.7);
+  filter: brightness(1.05);
+}
+
+.primary-button:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.result-section {
+  margin-top: 1.2rem;
+  font-size: 0.85rem;
+}
+
+.result-placeholder {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.result-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+}
+
+.result-summary {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 0.8rem;
+}
+
+.result-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.result-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.06);
+}
+
+.result-list li span {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.result-list li strong {
+  font-size: 0.85rem;
+}
+
+.result-highlight {
+  margin-top: 1rem;
+  padding: 0.8rem 0.9rem;
+  border-radius: 14px;
+  background: rgba(91, 141, 239, 0.12);
+  border: 1px solid rgba(91, 141, 239, 0.5);
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.4rem;
+}
+
+.result-highlight > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.result-highlight span {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.result-highlight strong {
+  font-size: 0.9rem;
+}
+
+.result-error {
+  font-size: 0.85rem;
+  color: #ff9c9c;
+  text-align: center;
+}
+
+.result-breakdown {
+  margin-top: 1.2rem;
+}
+
+.result-subtitle {
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 0.4rem;
+}
+
+.table-wrapper {
+  max-height: 220px;
+  overflow-y: auto;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.year-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+.year-table thead {
+  position: sticky;
+  top: 0;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(12px);
+}
+
+.year-table th,
+.year-table td {
+  padding: 0.35rem 0.45rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.year-table th:first-child,
+.year-table td:first-child {
+  text-align: left;
+}
+
+.year-table tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.year-table-total {
+  font-weight: 600;
+  background: rgba(91, 141, 239, 0.15) !important;
+  border-top: 1px solid rgba(91, 141, 239, 0.3);
+}
+.year-table-total td {
+  padding: 0.5rem 0.45rem;
+}
